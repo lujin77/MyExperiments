@@ -9,6 +9,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 jieba.load_userdict("dict/dict.txt.big")
+jieba.load_userdict("dict/idf.txt.big")
 
 
 # seg_list = jieba.cut("我来到北京清华大学", cut_all = True)

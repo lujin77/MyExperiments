@@ -76,6 +76,7 @@ for topic in socialTopic.find({"states": 1, "auditState": 2.0}):
     key = hash(title)
     if dict.get(key) != 1:
         dict.setdefault(key, 1)
+        #print title + " size=" + str(len(title))
         if len(title) > 5 and len(content) > 10:
             lineNo = lineNo + 1
             text = "%(lineNo)s\t%(index)s\t%(title)s\t%(content)s\t%(cateId)s\t%(cateName)s" \

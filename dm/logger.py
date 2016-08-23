@@ -19,5 +19,5 @@ console.setFormatter(formatter)
 # 将定义好的console日志handler添加到root logger
 logging.getLogger('console').addHandler(console)
 
-log = logging.getLogger('console')
-log.debug('this is a test')
+#log = logging.getLogger('console')
+#log.debug('this is a test')
