@@ -90,10 +90,12 @@ jieba.analyse.set_stop_words("dict/ext_stopwords.txt")
 jieba.analyse.set_idf_path("dict/idf.txt.big")
 print "[INFO] load analyse dict success"
 
+
+
 # 逐条处理语料
 fi = open('data/corpus.txt', 'r')
 fo = open('data/corpus_tag.txt', 'w')
-for line in fi.readlines():
+for line in fi:
     segs = line.strip().split('\t')
     lineNo = int(segs[0])
     index = int(segs[1])

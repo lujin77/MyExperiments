@@ -1,23 +1,25 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import logging
 
-# 配置日志信息
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                    datefmt='%m-%d %H:%M',
-                    filename='myapp.log',
-                    filemode='w')
+import logging;
 
-# 定义一个Handler打印INFO及以上级别的日志到sys.stderr
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
 
-# 设置日志打印格式
-formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-console.setFormatter(formatter)
+def initLogger(loggerName="logger", loggerFile="E:/Code/Python/py.log", isToFile=False):
+    # create a logger
+    logger = logging.getLogger(loggerName)
+    logger.setLevel(logging.DEBUG)
 
-# 将定义好的console日志handler添加到root logger
-logging.getLogger('console').addHandler(console)
+    # File Handler
+    fileHandler = logging.FileHandler(loggerFile)
+    fileHandler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'));
 
-#log = logging.getLogger('console')
-#log.debug('this is a test')
+    # File Handler
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'));
+
+    # 给logger添加handler
+    if isToFile:
+        logger.addHandler(fileHandler);
+    logger.addHandler(consoleHandler);
+
+    return logger;
