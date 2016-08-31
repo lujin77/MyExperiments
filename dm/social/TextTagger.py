@@ -1,4 +1,17 @@
 #! -*- coding:utf-8 -*-
+
+"""
+基于jieba分词，采用tfidf和TextRank方法提取文本关键词的封装类
+
+输入（mongodb）：
+  直接访问mongodb
+
+输出（文件）：
+  格式：行号 | 源数据序号 |  标题 | 内容 | 分类id |  分类名
+  例子：1	3	当狮子遇上其他星座	今天来讲讲大狮子跟其他星座的火花。[色]	46	穿越
+
+"""
+
 import sys
 import jieba.analyse
 import numpy as np
@@ -15,30 +28,30 @@ log = logger.initLogger("TextTagger")
 
 class TextTagger:
     # 控制变量，外部可修改
-    partOfSpeech = ('n', 'nr', 'ns', 'nt', 'nz', 'nrt', 'j', 'b', 'vn', 'ng')
-    topN = 5
-    title_weight_rate = 1.0
-    content_weight_rate = 0.8
-    ifidf_filter_weight = 0.4
-    textrank_filter_weight = 0.4
-    lable_weight_threshold = 0.8
+    partOfSpeech = ('n', 'nr', 'ns', 'nt', 'nz', 'nrt', 'j', 'b', 'vn', 'ng')   # 词性（仅列入的词性会成为关键词）
+    topN = 5                        # 提取的关键词默认格式
+    title_weight_rate = 1.0         # 标题词默认占的权重
+    content_weight_rate = 0.8       # 内容词默认占的权重
+    ifidf_filter_weight = 0.4       # tfidf生成词最小接受的阈值
+    textrank_filter_weight = 0.5    # TextRank生成词最小接受的阈值
+    lable_weight_threshold = 0.8    # 最终合成的关键词的组合权重过滤阈值
 
-    # 输入输出文件的缓存
+    # 输入输出文件的缓存，在构造函数中指定
     __INPUT_CORPUS_PATH = ""
     __OUTPUT_DETAIL_PATH = ""
     __OUTPUT_LABEL_PATH = ""
 
     # 需要加载的词典
-    __COMMON_SEGGER_PATH = "dict/dict.txt.big"
-    __SOUGOU_SEGGER_PATH = "dict/sougo.dict.txt"
-    __EXT_SEGGER_PATH = "dict/ext_dict.txt"
-    __ANALYSE_STOP_WORDS = "dict/stopwords.txt"
-    __ANALYSE_STOP_WORDS_EXT = "dict/ext_stopwords.txt"
+    __COMMON_SEGGER_PATH = "dict/dict.txt.big"              # jieba默认分词词典
+    __SOUGOU_SEGGER_PATH = "dict/sougo.dict.txt"            # 搜狗输入法解析的补充词典
+    __EXT_SEGGER_PATH = "dict/ext_dict.txt"                 # 自定义的扩展词典
+    __ANALYSE_STOP_WORDS = "dict/stopwords.txt"             # 默认的停用词典
+    __ANALYSE_STOP_WORDS_EXT = "dict/ext_stopwords.txt"     # 自定义的停用词典
     __ANALYSE_TFIDF = "dict/idf.txt.big"
 
     # 内部计算使用变量
-    __total_lables_dict = {}  # 最终导出的标签词典，输出格式：word count flag
-    __sample_tags_dict = {}  # 合并标签用的词典，保存各源头的权重
+    __total_lables_dict = {}    # 最终导出的标签词典，输出格式：word count flag
+    __sample_tags_dict = {}     # 单条语料的标签缓存，合并标签用的词典，保存算法来源及权重
     __count = 0
     __dump_mode = "all"
 
@@ -68,6 +81,16 @@ class TextTagger:
         log.info("all analyse dict load success")
 
     def extract_tag_batch(self, corpus_in, detail_out, labels_out):
+        """
+        批量生产tag的处理方法
+
+        Parameters:
+            corpus_in - 输入的语料文件路径
+            detail_out - 输出每一条处理明细的输出文件路径
+            labels_out - 逐条语料对应标签词的输出文件路径
+        Returns: 无
+        Raises: 无
+        """
         try:
 
             self.__INPUT_CORPUS_PATH = corpus_in
@@ -147,33 +170,55 @@ class TextTagger:
             log.info("processed %d lines" % self.__count)
 
     def __merge_tag(self, tags, src):
+        """
+        内部方法，用dict合并标签词，并标签词来源。共处理2个dict：
+        1. 单条语料的关键词及算法权重映射的dict： word -> {src1 : weight, src2 : weight}
+        2. 关键词在总语料空间中的词频dict： word -> count
+
+        Parameters:
+            tags - 生产的标签词list [ ((word:str, flag:str), weight:foat)]
+            src - 来源的算法, str
+        Returns: 无
+        Raises: 无
+        """
         # merge result
         for turple in tags:
 
+            # 词及词性的字符串，构成key
             key = "%s[%s]" % (turple[0].word, turple[0].flag)
 
             # 累加权重、源头
             if self.__sample_tags_dict.has_key(key):
                 dict = self.__sample_tags_dict.get(key)
+                # 记录该词在src源头算法下的权重
                 dict[src] = turple[1]
                 self.__sample_tags_dict[key] = dict
             else:
                 dict = {}
+                # 记录该词在src源头算法下的权重
                 dict[src] = turple[1]
                 self.__sample_tags_dict[key] = dict
 
             # 记录总的标签库
             if self.__total_lables_dict.has_key(key):
                 count = self.__total_lables_dict.get(key) + 1
+                # 记录该词在整个语料中被识别为关键词的次数
                 self.__total_lables_dict[key] = count
             else:
                 self.__total_lables_dict[key] = 1
 
     def __dump_merged_tags(self):
+        """
+        根据内部的关键词统计dict，按权重逆序输出关键词
+
+        Parameters:无
+        Returns: 无
+        Raises: 无
+        """
         tags_list = []
         for k, v in self.__sample_tags_dict.iteritems():
             tuple = self.__get_weight_src(v)
-            # 组合元组
+            # 组合关键词元组(word, src, weight)
             tags_list.append((k.encode("utf-8"), tuple[0], tuple[1]))
         tags_list.sort(key=lambda x: x[1], reverse=True)
         # 按格式输出满足指定阈值的标签词
@@ -183,6 +228,9 @@ class TextTagger:
 
     # 效果不好，废弃
     def __get_weight_src_v1(self, dict={}):
+        """ @Deprecated，请使用 __get_weight_src()
+        针对某一个关键词，依据缓存的dict，组合其最终权重（权重做了归一化），并打上来源的标识str
+        """
         # 组合权重，构造src标识
         src_list = []
         weight = 0.0
@@ -223,11 +271,19 @@ class TextTagger:
         return (weight, src_str)
 
     def __get_weight_src(self, dict={}):
+        """
+        针对某一个关键词，依据缓存的dict，组合其最终权重，并打上来源的标识str
+
+        Parameters: 某一个关键词的来源及权重dict，格式：{src1 -> weight, src2 -> weight, src3 -> weight}
+        Returns: 词及来源的元组（word, 'src1 src2'）
+        Raises: 无
+        """
         # 组合权重，构造src标识
         src_list = []
         weight = 0.0
         for k, v in dict.iteritems():
             src_list.append(k)
+            # 区分标题和内容的子权重占比
             if k == "tf" or k == "tr":
                  weight = weight + v * self.title_weight_rate
             elif k == "cf" or k == "cr":
@@ -242,7 +298,13 @@ class TextTagger:
 
 
     def __dump_lables(self):
+        """
+        输出整个语料空间的标签词及其词频
 
+        Parameters: 无，基于 self.__total_lables_dict
+        Returns: 词文件，格式：（词， 词频， 词性）
+        Raises: 无
+        """
         if self.__OUTPUT_LABEL_PATH == "":
             log.fatal("label output path is null !")
             return
@@ -361,6 +423,8 @@ class TextTagger:
         return result
 
 
-tagger = TextTagger(isLoadExtDict=True)
-# tagger = TextTagger()
-tagger.extract_tag_batch('data/corpus.txt', 'data/corpus_tag.txt', 'data/corpus_labels.txt')
+# 一个使用的例子，批量模式
+if __name__ == '__main__':
+    tagger = TextTagger(isLoadExtDict=True)
+    # tagger = TextTagger()
+    tagger.extract_tag_batch('data/corpus.txt', 'data/corpus_tag.txt', 'data/corpus_labels.txt')

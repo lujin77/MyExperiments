@@ -1,4 +1,10 @@
 #! -*- coding:utf-8 -*-
+
+"""
+@Deprecated，请改用 WordSegger.py
+采用jieba的tfidf和TextRank提取关键词
+"""
+
 import sys
 import chardet
 import jieba.analyse

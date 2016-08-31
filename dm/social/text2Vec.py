@@ -1,4 +1,18 @@
 #! -*- coding:utf-8 -*-
+
+"""step 3
+采用gensim包对语料进行向量化，转换为词袋模型
+词典的词典、向量化后的语料写入文件，供后续步骤使用
+
+输入（文件）：分词后的语料文件
+  格式：行号 | 源数据序号 |  分词后的标题（“ ”连接） | 分词后的内容（“ ”连接） | 分类id |  分类名
+  例子：1	3	'狮子 遇上 星座'    '讲讲 狮子 星座 火花 色'	46	穿越
+
+输出（文件）：gensim的词袋词典、向量化后的语料文件
+  格式：gensim默认格式
+
+"""
+
 from gensim import corpora
 from collections import defaultdict
 import os, sys
@@ -9,7 +23,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-# 提取文档集合
+# 提取文档集合，输入格式为tsv：行号 | 源数据序号 |  分词后的标题（“ ”连接） | 分词后的内容（“ ”连接） | 分类id |  分类名
+# 例子： 1    2   '测试 标题'    '测试 内容'    1   体育
 fi = open('data/corpus_segged.txt', 'r')
 texts = []
 titles = []

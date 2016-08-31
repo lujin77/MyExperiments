@@ -1,4 +1,17 @@
 # -*- coding:utf-8 -*-
+
+"""step 1
+从mongodb获取语料的脚本，解析为tsv
+
+输入（mongodb）：
+  直接访问mongodb
+
+输出（文件）：
+  格式：行号 | 源数据序号 |  标题 | 内容 | 分类id |  分类名
+  例子：1	3	当狮子遇上其他星座	今天来讲讲大狮子跟其他星座的火花。[色]	46	穿越
+
+"""
+
 from pymongo import MongoReplicaSetClient
 from pymongo import MongoClient
 import os, sys
@@ -6,11 +19,18 @@ import os, sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-MONGDB_URL = "mongodb://10.125.141.131:30000/"
+MONGDB_URL = "mongodb://IP:PORT/"
+OUTPUT_CORPUS = "data/corpus.txt"
 
 
-# 统计行数
 def count(collection, condition):
+    """统计行数
+        Parameters:
+            collection - mongodb的文档集
+            condition - mongodb的查询条件
+        Returns: 字符串“total=XX， valid=XXX”
+        Raises: 无
+    """
     total = 0
     valid = 0
     for topic in collection.find(condition):
@@ -23,6 +43,12 @@ def count(collection, condition):
 
 
 def getCateTurple(groupId):
+    """获取某一个圈子对应的分类信息，包括：分类id、分类层级、分类名
+        Parameters:
+            groupId - 圈子id
+        Returns: 元组（分类id, 分类层级, 分类名）
+        Raises: 无
+    """
     if groupId == "" or groupId == "null":
         return ("null", "null", "null")
 
@@ -43,9 +69,9 @@ def getCateTurple(groupId):
 client = MongoClient(MONGDB_URL)
 
 db = client.social
-socialTopic = db.socialTopic
-socialGroup = db.socialGroup
-socialCategory = db.socialCategory
+socialTopic = db.socialTopic        # 话题
+socialGroup = db.socialGroup        # 圈子
+socialCategory = db.socialCategory  # 分类
 
 # count(collection, {"states" : 1, "auditState" : 2.0})
 
@@ -53,9 +79,8 @@ index = 0
 lineNo = 0
 dict = {}
 
-fo = open("data/corpus.txt", "w")
-
-# 遍历topic
+# 遍历话题，提前原始语料，整理为tsv写到文件
+fo = open(OUTPUT_CORPUS, "w")
 for topic in socialTopic.find({"states": 1, "auditState": 2.0}):
     title = (topic.get("topicName", "null"))
     title = ''.join(title.split())
