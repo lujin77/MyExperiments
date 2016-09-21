@@ -1,4 +1,11 @@
+# -*- coding:utf-8 -*-
+
+
 from kafka import MultiProcessConsumer, KafkaClient
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 brokers = ["10.0.11.91:9092"]
 kafka = KafkaClient(brokers)

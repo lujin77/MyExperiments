@@ -1,11 +1,18 @@
+# -*- coding:utf-8 -*-
+
+
 from kafka import KafkaConsumer
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 # To consume latest messages and auto-commit offsets
 # consumer = KafkaConsumer('test',
 #                          group_id='test1-group',
 #                          bootstrap_servers=['10.0.11.91:9092'])
 
-consumer = KafkaConsumer('dispatch_info', bootstrap_servers=['10.0.11.91:9092'])
+consumer = KafkaConsumer('dispatch_detail_info', bootstrap_servers=['10.0.11.91:9092'])
 
 for message in consumer:
     # message value and key are raw bytes -- decode if necessary!

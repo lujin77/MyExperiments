@@ -1,7 +1,12 @@
+# -*- coding:utf-8 -*-
 
 from kafka import KafkaConsumer
 import multiprocessing
 
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 def worker(index):
 	consumer = KafkaConsumer('test_m', group_id='parallel1-group', bootstrap_servers=['10.0.11.91:9092'])

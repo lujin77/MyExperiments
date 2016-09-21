@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+
 import time
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
@@ -10,7 +12,7 @@ while True:
 
 	msg = 'hello world {time}'.format(time=time.strftime(ISOTIMEFORMAT, time.localtime()))
 	# Asynchronous by default
-	future = producer.send('test', msg)
+	future = producer.send('dispatch_info', msg)
 	print "send -> " + msg
 
 	# # Block for 'synchronous' sends
