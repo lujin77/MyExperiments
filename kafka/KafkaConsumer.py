@@ -12,7 +12,7 @@ sys.setdefaultencoding('utf8')
 #                          group_id='test1-group',
 #                          bootstrap_servers=['10.0.11.91:9092'])
 
-consumer = KafkaConsumer('dispatch_detail_info', bootstrap_servers=['10.0.11.91:9092'])
+consumer = KafkaConsumer('log_test', group_id='logstash', bootstrap_servers=['10.0.11.91:9092'])
 
 for message in consumer:
     # message value and key are raw bytes -- decode if necessary!
