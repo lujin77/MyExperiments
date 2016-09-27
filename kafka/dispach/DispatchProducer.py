@@ -5,7 +5,7 @@ import sys, time, random
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
-IS_LOOP = False
+IS_LOOP = True
 # 加载日志
 log_list = []
 with open("data/dispatch/dispatch_info.log.20160920", "r") as fp:
@@ -18,11 +18,13 @@ producer = KafkaProducer(bootstrap_servers=['10.0.11.91:9092'])
 size = len(log_list) - 1
 
 if IS_LOOP:
-	while True:
-		msg = log_list[random.randint(0, size)]
+	#while True:
+		#msg = log_list[random.randint(0, size)]
+	for i in xrange(len(log_list)):
+		msg = log_list[i]
 		# Asynchronous by default
 		future = producer.send(TOPIC, msg)
-		print "[TRACE] send -> " + msg
+		#print "[TRACE] send -> " + msg
 
 		# # Block for 'synchronous' sends
 		try:
@@ -31,7 +33,7 @@ if IS_LOOP:
 			print "[ERROR] get ask failed, msg=" + msg
 			pass
 
-		time.sleep(5)
+		#time.sleep(0.1)
 else:
 	msg = log_list[random.randint(0, size)]
 	#msg = "begin 123.456 end"

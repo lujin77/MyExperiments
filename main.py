@@ -1,22 +1,12 @@
 #! -*- coding:utf-8 -*-
-import sys
-import jieba
-import jieba.analyse
+from multiprocessing import Process, Queue
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+def f(q, msg):
+    q.put([42, None, 'hello', msg])
 
-jieba.load_userdict("dm/social/dict/dict.txt.big")
-jieba.load_userdict("dm/social/dict/ext_dict.txt")
-#jieba.add_word('小蛮腰')
-test_str = "7天快速塑造迷人小蛮腰"
-print ' ' .join(jieba.cut(test_str))
-
-print ' ' .join(jieba.analyse.extract_tags(test_str, topK=10))
-# partOfSpeech=('n','an', 'ns', 'vn', 'nz', 'nr', 'nrt', 'ns', 'nt','j','b')
-# tags = jieba.analyse.extract_tags(test_str, topK=3, withWeight=True, allowPOS=partOfSpeech, withFlag=True)
-# for tag in tags:
-#     obj = tag[0]
-#     print obj.word + " " + obj.flag
-
-
+if __name__ == '__main__':
+    q = Queue()
+    p = Process(target=f, args=(q, "test"))
+    p.start()
+    print(q.get())    # prints "[42, None, 'hello']"
+    p.join()
