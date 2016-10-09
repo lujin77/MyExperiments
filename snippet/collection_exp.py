@@ -54,3 +54,6 @@ c = Counter()
 for ch in 'programming':
 	c[ch] = c[ch] + 1
 print c
+
+cnt= Counter(list('aabbccccd'))
+print cnt.most_common(10)
