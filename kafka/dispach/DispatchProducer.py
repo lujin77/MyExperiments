@@ -24,7 +24,7 @@ if IS_LOOP:
 		msg = log_list[i]
 		# Asynchronous by default
 		future = producer.send(TOPIC, msg)
-		#print "[TRACE] send -> " + msg
+		print "[TRACE] send -> " + msg
 
 		# # Block for 'synchronous' sends
 		try:
@@ -33,7 +33,7 @@ if IS_LOOP:
 			print "[ERROR] get ask failed, msg=" + msg
 			pass
 
-		#time.sleep(0.1)
+		time.sleep(1)
 else:
 	msg = log_list[random.randint(0, size)]
 	#msg = "begin 123.456 end"
